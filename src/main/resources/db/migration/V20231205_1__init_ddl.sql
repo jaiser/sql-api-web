@@ -1,8 +1,8 @@
 -- ----------------------------
--- Table structure for common_database_conf_d
+-- Table structure for common_data_source_conf_d
 -- ----------------------------
-DROP TABLE IF EXISTS `common_database_conf_d`;
-CREATE TABLE `common_database_conf_d` (
+DROP TABLE IF EXISTS `common_data_source_conf_d`;
+CREATE TABLE `common_data_source_conf_d` (
                                           `id` int NOT NULL AUTO_INCREMENT COMMENT 'id',
                                           `name` varchar(255) DEFAULT NULL COMMENT '名称',
                                           `type` varchar(255) NOT NULL COMMENT '数据库类型： PG/MYSQL/ORACLE等',
@@ -29,7 +29,7 @@ CREATE TABLE `common_sql_api_conf_d` (
                                          `operate_type` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'QUERY' COMMENT '操作类型 QUERY/UPDATE/DELETE/INSERT',
                                          `value` text CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT 'mybatis sql脚本',
                                          `remark` varchar(255) DEFAULT NULL COMMENT '备注',
-                                         `database_id` int DEFAULT NULL COMMENT '数据库id， 为空则默认当前数据库',
+                                         `data_source_id` int DEFAULT NULL COMMENT '数据库id， 为空则默认当前数据库',
                                          `create_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
                                          `update_time` timestamp NULL DEFAULT NULL COMMENT '修改时间',
                                          PRIMARY KEY (`id`,`code`)

@@ -3,7 +3,6 @@ package fun.jaiser.sqlapiweb.service;
 import fun.jaiser.sqlapiweb.domain.QryPageVo;
 import fun.jaiser.sqlapiweb.evt.CommonEvt;
 import fun.jaiser.sqlapiweb.evt.QryPageEvt;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
@@ -24,6 +23,13 @@ public interface CommonService {
      */
     QryPageVo query(String code, QryPageEvt qryPageEvt);
 
+    /**
+     * 查询
+     * @param code
+     * @param evt
+     * @return
+     */
+    Map queryOne(String code, QryPageEvt evt);
     /**
      * 新增
      * @param code
@@ -51,6 +57,6 @@ public interface CommonService {
     /**
      * 更新数据库信息
      */
-    boolean updateDatabase();
+    boolean updateDataSource();
 
 }

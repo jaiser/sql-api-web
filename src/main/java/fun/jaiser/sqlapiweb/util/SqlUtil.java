@@ -36,7 +36,8 @@ public class SqlUtil {
     public static String getMybatisExecuteSql(String orgSql, Map<String, Object> paramMap) {
         LanguageDriver languageDriver = new XMLLanguageDriver();
         Configuration configuration = new Configuration();
-        SqlSource sqlSource = languageDriver.createSqlSource(configuration, orgSql.trim(), Map.class);
+        // 必须要加script标签才能解析mybatis脚本
+        SqlSource sqlSource = languageDriver.createSqlSource(configuration, "<script>" + orgSql.trim() + "</script>", Map.class);
         BoundSql boundSql = sqlSource.getBoundSql(paramMap);
 
         List<ParameterMapping> paramValues = boundSql.getParameterMappings();

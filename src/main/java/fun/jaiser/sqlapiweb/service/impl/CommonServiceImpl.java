@@ -1,10 +1,9 @@
 package fun.jaiser.sqlapiweb.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
-import fun.jaiser.sqlapiweb.domain.CommonDatabaseConfVo;
+import fun.jaiser.sqlapiweb.domain.CommonDataSourceConfVo;
 import fun.jaiser.sqlapiweb.domain.CommonSqlApiConfVo;
 import fun.jaiser.sqlapiweb.domain.QryPageVo;
 import fun.jaiser.sqlapiweb.enums.OperateTypeEnum;
@@ -14,15 +13,14 @@ import fun.jaiser.sqlapiweb.mapper.CommonDatabaseConfMapper;
 import fun.jaiser.sqlapiweb.mapper.CommonMapper;
 import fun.jaiser.sqlapiweb.mapper.CommonSqlApiConfMapper;
 import fun.jaiser.sqlapiweb.service.CommonService;
+import fun.jaiser.sqlapiweb.util.DataSourceUtil;
 import fun.jaiser.sqlapiweb.util.SqlUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
-import java.sql.Wrapper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -46,12 +44,12 @@ public class CommonServiceImpl implements CommonService {
     @Autowired
     private CommonMapper commonMapper;
 
-    private static List<CommonDatabaseConfVo> DATABASE_CONF_VO_LIST = new ArrayList<>();
+    private static List<CommonDataSourceConfVo> DATA_SOURCE_CONF_VO_LIST = new ArrayList<>();
 
     @PostConstruct
     public void init() {
         // 初始化
-        this.updateDatabase();
+        this.updateDataSource();
     }
 
     @Override
@@ -61,14 +59,42 @@ public class CommonServiceImpl implements CommonService {
         String sql = SqlUtil.getMybatisExecuteSql(vo.getValue(), qryPageEvt.getParam());
 
         List<Map<String, Object>> list = null;
-        if (qryPageEvt.isCountTotal() && qryPageEvt.getPageSize() > 0 && qryPageEvt.getPageNum() > 0) {
-            Page page = PageHelper.startPage(qryPageEvt.getPageNum(), qryPageEvt.getPageSize(), qryPageEvt.isCountTotal());
-            list = commonMapper.query(sql);
-            return QryPageVo.getInstance(qryPageEvt, list, page.getTotal());
+        // 判断是否有配置数据库信息
+        if (vo.getDataSourceId() != null && vo.getDataSourceId() > 0) {
+            QryPageVo queryPageVm = DataSourceUtil.INSTANCE(getDataSourceVm(vo.getDataSourceId()), qryPageEvt).listInfo(sql);
+            list = queryPageVm.getInfoList();
+            return QryPageVo.getInstance(qryPageEvt, list, queryPageVm.getTotal());
+        } else {
+            if (qryPageEvt.isCountTotal() && qryPageEvt.getPageSize() > 0 && qryPageEvt.getPageNum() > 0) {
+                Page page = PageHelper.startPage(qryPageEvt.getPageNum(), qryPageEvt.getPageSize(), qryPageEvt.isCountTotal());
+                list = commonMapper.query(sql);
+                return QryPageVo.getInstance(qryPageEvt, list, page.getTotal());
+            } else {
+                list = commonMapper.query(sql);
+                return QryPageVo.getInstance(qryPageEvt, list, -1L);
+            }
+        }
+
+
+    }
+
+    @Override
+    public Map queryOne(String code, QryPageEvt evt) {
+        CommonSqlApiConfVo vo = this.getConfVo(code, OperateTypeEnum.QUERY);
+        String sql = SqlUtil.getMybatisExecuteSql(vo.getValue(), evt.getParam());
+
+        List<Map<String, Object>> list = null;
+        // 判断是否有配置数据库信息
+        if (vo.getDataSourceId() != null && vo.getDataSourceId() > 0) {
+            QryPageVo queryPageVm = DataSourceUtil.INSTANCE(getDataSourceVm(vo.getDataSourceId()), evt).listInfo(sql);
+            list = queryPageVm.getInfoList();
         } else {
             list = commonMapper.query(sql);
-            return QryPageVo.getInstance(qryPageEvt, list, -1L);
         }
+        if (list == null || list.isEmpty()) {
+            return null;
+        }
+        return list.get(0);
     }
 
     @Override
@@ -79,10 +105,15 @@ public class CommonServiceImpl implements CommonService {
             for (Map<String, Object> map :
                     mapList) {
                 String sql = SqlUtil.getMybatisExecuteSql(vo.getValue(), map);
-                commonMapper.insert(sql);
+
+                if (vo.getDataSourceId() != null && vo.getDataSourceId() > 0) {
+                    return DataSourceUtil.INSTANCE(getDataSourceVm(vo.getDataSourceId()), evt).optionData(sql) > 0;
+                } else {
+                    return commonMapper.insert(sql) > 0;
+                }
             }
             return true;
-        }catch (Exception e) {
+        } catch (Exception e) {
             log.error("插入信息异常", e);
             return false;
         }
@@ -93,9 +124,12 @@ public class CommonServiceImpl implements CommonService {
         CommonSqlApiConfVo vo = this.getConfVo(code, OperateTypeEnum.UPDATE);
         try {
             String sql = SqlUtil.getMybatisExecuteSql(vo.getValue(), evt.getParam());
-            commonMapper.update(sql);
-            return true;
-        }catch (Exception e) {
+            if (vo.getDataSourceId() != null && vo.getDataSourceId() > 0) {
+                return DataSourceUtil.INSTANCE(getDataSourceVm(vo.getDataSourceId()), evt).optionData(sql) > 0;
+            } else {
+                return commonMapper.update(sql) > 0;
+            }
+        } catch (Exception e) {
             log.error("修改信息异常", e);
             return false;
         }
@@ -106,20 +140,23 @@ public class CommonServiceImpl implements CommonService {
         CommonSqlApiConfVo vo = this.getConfVo(code, OperateTypeEnum.DELETE);
         try {
             String sql = SqlUtil.getMybatisExecuteSql(vo.getValue(), evt.getParam());
-            commonMapper.delete(sql);
-            return true;
-        }catch (Exception e) {
+            if (vo.getDataSourceId() != null && vo.getDataSourceId() > 0) {
+                return DataSourceUtil.INSTANCE(getDataSourceVm(vo.getDataSourceId()), evt).optionData(sql) > 0;
+            } else {
+                return commonMapper.delete(sql) > 0;
+            }
+        } catch (Exception e) {
             log.error("删除信息异常", e);
             return false;
         }
     }
 
     @Override
-    public boolean updateDatabase() {
+    public boolean updateDataSource() {
         try {
-            DATABASE_CONF_VO_LIST = commonDatabaseConfMapper.selectList(null);
+            DATA_SOURCE_CONF_VO_LIST = commonDatabaseConfMapper.selectList(null);
             return true;
-        }catch (Exception e) {
+        } catch (Exception e) {
             return false;
         }
     }
@@ -133,5 +170,18 @@ public class CommonServiceImpl implements CommonService {
             throw new RuntimeException("未查询到配置信息，请确认是否存在对应配置！");
         }
         return vo;
+    }
+
+    /**
+     * 获取数据库配置
+     *
+     * @param dataSourceId
+     * @return
+     */
+    private CommonDataSourceConfVo getDataSourceVm(Integer dataSourceId) {
+        if (DATA_SOURCE_CONF_VO_LIST == null || DATA_SOURCE_CONF_VO_LIST.isEmpty() || dataSourceId == null || dataSourceId == 0) {
+            return null;
+        }
+        return DATA_SOURCE_CONF_VO_LIST.stream().filter(item -> item.getId() == dataSourceId.intValue()).findFirst().orElse(null);
     }
 }

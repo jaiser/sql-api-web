@@ -59,6 +59,30 @@ public class CommonController {
         }
     }
 
+    @ApiOperation("查询单个数据对象")
+    @PostMapping("/queryOne/{code}")
+    public RespResult queryOne(@PathVariable("code") String code,
+                            @RequestBody CommonEvt<Map<String, Object>> evt) {
+        if (!StringUtils.hasText(code)) {
+            return RespResult.getInstance().error("编码不能为空！");
+        }
+        QryPageEvt qryPageEvt = new QryPageEvt();
+        qryPageEvt.setParam(evt.getParam());
+        qryPageEvt.setCountTotal(false);
+
+        try {
+            log.info("【查询对象】数据《开始》,code值为:《{}》入参为:《{}》", code, evt);
+            long startTime = System.currentTimeMillis();
+            Map map = commonService.queryOne(code, qryPageEvt);
+            long endTime = System.currentTimeMillis();
+            log.info("【查询对象】数据《成功》,查询code为:《{}》,耗时为:《{}》ms", code, (endTime - startTime));
+            return RespResult.getInstance().success(map, "查询成功");
+        }catch (Exception e) {
+            log.error("【查询对象】数据《失败》,失败原因:《{}》", e.getMessage(), e);
+            return RespResult.getInstance().error("查询对象《失败》,失败原因:" + e.getMessage());
+        }
+    }
+
     @ApiOperation("新增数据")
     @PostMapping("/insert/{code}")
     public RespResult insert(@PathVariable("code") String code, @RequestBody CommonEvt<List<Map<String, Object>>> evt) {

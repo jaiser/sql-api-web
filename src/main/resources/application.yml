@@ -5,9 +5,9 @@ spring:
 # 数据库连接配置
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://xxx
-    username: xxx
-    password: xxx
+    url: jdbc:mysql://xxxx/jaiser?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+    username: xxxx
+    password: xxxx
     hikari:
       poolName: Hikari
       auto-commit: false
@@ -19,7 +19,7 @@ spring:
 # 数据库版本控制
   flyway:
     # 是否启用flyway
-    enabled: false
+    enabled: true
     # 编码格式，默认UTF-8
     encoding: UTF-8
     # 迁移sql脚本文件存放路径，默认db/migration
@@ -54,3 +54,6 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     #开启驼峰命名匹配
     map-underscore-to-camel-case: true
+
+job:
+  update-data-source: 0/30 * * * * ?

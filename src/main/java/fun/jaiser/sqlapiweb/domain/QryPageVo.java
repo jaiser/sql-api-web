@@ -36,6 +36,7 @@ public class QryPageVo<T> implements Serializable {
         queryPageVm.setPageSize(queryPageEvt.getPageSize());
         queryPageVm.setInfoList(infoList);
         queryPageVm.setTotal(total);
+        queryPageVm.setCountTotal(queryPageEvt.isCountTotal());
         return queryPageVm;
     }
 }

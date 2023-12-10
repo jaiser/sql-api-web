@@ -38,8 +38,8 @@ public class CommonSqlApiConfVo implements Serializable {
     @TableField(value = "remark")
     private String remark;
 
-    @TableField(value = "database_id")
-    private Integer databaseId;
+    @TableField(value = "data_source_id")
+    private Integer dataSourceId;
 
     @TableField(value = "create_time", fill = FieldFill.INSERT)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

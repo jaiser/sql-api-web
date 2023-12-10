@@ -1,7 +1,7 @@
 package fun.jaiser.sqlapiweb.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import fun.jaiser.sqlapiweb.domain.CommonDatabaseConfVo;
+import fun.jaiser.sqlapiweb.domain.CommonDataSourceConfVo;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -10,5 +10,5 @@ import org.springframework.stereotype.Repository;
  * @DATE: 2023/12/7
  */
 @Repository
-public interface CommonDatabaseConfMapper extends BaseMapper<CommonDatabaseConfVo> {
+public interface CommonDatabaseConfMapper extends BaseMapper<CommonDataSourceConfVo> {
 }
